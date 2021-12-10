@@ -1,8 +1,9 @@
 const { Kafka } = require("kafkajs");
 const transporter = require("./transporter");
+const sequelize = require("./connector");
+
 let mailOptions = {
   from: "berlom69@gmail.com",
-  to: "hamza.ben.romdhane98@gmail.com",
   subject: "test subject",
 };
 module.exports = async () => {
@@ -21,10 +22,14 @@ module.exports = async () => {
       //   value: message.value.toString(),
       // });
 
-      const body = JSON.parse(message.value.toString());
+      // const body = JSON.parse(message.value.toString());
       mailOptions = { ...mailOptions, text: message.value.toString() };
-      transporter.sendMail(mailOptions, (err, inf) => {
-        err ? console.log(err) : console.log(inf.response);
+      const result = await sequelize.query("select email from users");
+      result[0].map((elt) => {
+        mailOptions = { ...mailOptions, to: elt.email };
+        transporter.sendMail(mailOptions, (err, inf) => {
+          err ? console.log(err) : console.log(inf.response);
+        });
       });
     },
   });
