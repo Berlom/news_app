@@ -1,5 +1,6 @@
 const { Kafka } = require("kafkajs");
 var fs = require("fs");
+const handlebars = require("handlebars");
 const transporter = require("./transporter");
 const sequelize = require("./connector");
 
@@ -7,13 +8,6 @@ let mailOptions = {
   from: "berlom69@gmail.com",
   subject: "Checkout Latest News",
 };
-
-fs.readFile("./mail.html", { encoding: "utf-8" }, (err, html) => {
-  if (err) console.log(err);
-  else {
-    mailOptions = { ...mailOptions, html: html };
-  }
-});
 
 module.exports = async () => {
   try {
@@ -35,6 +29,23 @@ module.exports = async () => {
 
         const body = JSON.parse(message.value.toString());
         console.log(body);
+
+        fs.readFile("./mail.html", { encoding: "utf-8" }, (err, html) => {
+          if (err) console.log(err);
+          else {
+            var template = handlebars.compile(html);
+            var replacements = {
+              title: body.title,
+              description: body.description,
+              date: body.date,
+              category: body.category,
+              author: body.author,
+            };
+            var htmlToSend = template(replacements);
+            mailOptions = { ...mailOptions, html: htmlToSend };
+          }
+        });
+
         // mailOptions = { ...mailOptions, text: body.titre };
         console.log(mailOptions);
         const result = await sequelize.query(
