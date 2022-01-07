@@ -1,5 +1,8 @@
 const express = require("express");
+const { CompressionTypes, CompressionCodecs } = require("kafkajs");
+const SnappyCodec = require("kafkajs-snappy");
 
+CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec;
 const app = express();
 
 const consumer = require("./consumer");
